@@ -93,6 +93,7 @@ jobs:
             break
           fi
           echo "Pod status: $STATUS. Retrying in 5 seconds..."
+          sleep 5
         done
 
         if [[ "$STATUS" != "Running" ]]; then
