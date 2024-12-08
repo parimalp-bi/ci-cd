@@ -98,6 +98,11 @@ jobs:
           --set image.tag=${IMAGE_TAG} \
           --set service.type=NodePort
           
+    - name: Retrieve App Label
+      run: |
+        APP_LABEL=$(helm get manifest flask-app | grep 'app:' | head -n 1 | awk '{print $2}')
+        echo "App label: $APP_LABEL
+
     # # 7. Deploy Application
     # - name: Deploy Application
     #   env:
@@ -112,7 +117,7 @@ jobs:
         echo "Waiting for the pod to be ready..."
         POD_NAME=""
         for _ in {1..30}; do
-          POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
+          POD_NAME=$(kubectl get pods -l app=app -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
           [[ -n "$POD_NAME" ]] && STATUS=$(kubectl get pod $POD_NAME -o=jsonpath='{.status.phase}') || STATUS=""
           if [[ "$STATUS" == "Running" ]]; then
             echo "Pod is running: $POD_NAME"
