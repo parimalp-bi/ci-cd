@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   pull_request:
@@ -59,75 +59,7 @@ jobs:
     #   run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:${{ env.IMAGE_TAG }}
 
     # 7. Build Helm Chart
-    - name: Build Helm Charts
-      run: helm package helm/flask-app
+    # - name: Build Helm Charts
+    #   run: helm package helm/flask-app
 
 
-    # 4. Install kubectl
-    - name: Install kubectl
-      run: |
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-
-    # 5. Set Up kind
-    - name: Set up kind
-      run: |
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-        chmod +x ./kind
-        sudo mv ./kind /usr/local/bin/kind
-        kind create cluster --name test-cluster
-
-    # 6. Load Docker Image into kind
-    - name: Load Docker Image into kind
-      env:
-        IMAGE_TAG: ${{ github.run_number }}
-      run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
-
-    # 7. Install Helm
-    - name: Install Helm
-      run: |
-        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-
-    # 8. Deploy with Helm
-    - name: Deploy Application with Helm
-      env:
-        IMAGE_TAG: ${{ github.run_number }}
-      run: |
-        helm upgrade --install flask-app ./helm/flask-app \
-          --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
-          --set image.tag=${IMAGE_TAG} \
-          --set service.type=NodePort
-
-    # 8. Test Application
-    - name: Test Application
-      run: |
-        echo "Waiting for the pod to be ready..."
-        POD_NAME=""
-        for _ in {1..30}; do
-          POD_NAME=$(kubectl get pods -l app=app -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
-          [[ -n "$POD_NAME" ]] && STATUS=$(kubectl get pod $POD_NAME -o=jsonpath='{.status.phase}') || STATUS=""
-          if [[ "$STATUS" == "Running" ]]; then
-            echo "Pod is running: $POD_NAME"
-            break
-          fi
-          echo "Pod status: $STATUS. Retrying in 5 seconds..."
-          sleep 5
-        done
-
-        if [[ "$STATUS" != "Running" ]]; then
-          echo "Error: Pod did not start within the expected time."
-          exit 1
-        fi
-
-        echo "Setting up port forwarding..."
-        kubectl port-forward pod/$POD_NAME 5001:5001 &
-        sleep 5
-        echo "Testing the application..."
-        curl --retry 5 --retry-delay 5 -s http://localhost:5001/
-        kubectl logs pod/${POD_NAME}
-
-        
-    # 9. Clean Up
-    - name: Delete kind Cluster
-      run: kind delete cluster --name test-cluster      
