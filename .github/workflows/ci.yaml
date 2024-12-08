@@ -81,14 +81,14 @@ jobs:
     - name: Load Docker Image into kind
       env:
         IMAGE_TAG: ${{ github.run_number }}
-      run: kind load docker-image flask-app:${IMAGE_TAG} --name test-cluster
+      run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
 
     # 7. Deploy Application
     - name: Deploy Application
       env:
         IMAGE_TAG: ${{ github.run_number }}
       run: |
-        kubectl create deployment flask-app --image=flask-app:${IMAGE_TAG}
+        kubectl create deployment flask-app --image=${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG}
         kubectl expose deployment flask-app --type=NodePort --port=5001
 
     # 8. Test Application
