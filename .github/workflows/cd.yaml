@@ -85,7 +85,7 @@ jobs:
       run: |
         echo "Waiting for the pod to be ready..."
         POD_NAME=""
-        for _ in {1..30}; do
+        for _ in {1..5}; do
           POD_NAME=$(kubectl get pods -l app=app -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
           [[ -n "$POD_NAME" ]] && STATUS=$(kubectl get pod $POD_NAME -o=jsonpath='{.status.phase}') || STATUS=""
           if [[ "$STATUS" == "Running" ]]; then
@@ -94,7 +94,7 @@ jobs:
           fi
           echo "Pod status: $STATUS. Retrying in 5 seconds..."
           kubectl describe pod ${POD_NAME}
-          kubectl logs ${POD_NAME}
+          kubectl logs pod/${POD_NAME}
           sleep 10
         done
 
