@@ -18,7 +18,7 @@ jobs:
 
     # 2. Download Image Tag Artifact
     - name: Download Image Tag Artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: image-tag
 
