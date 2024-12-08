@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: List Available Artifacts (Debug)
-      run: ls /home/runner/work
+      run: ls -R /home/runner/work
 
 
     # 2. Download Image Tag Artifact
