@@ -18,6 +18,8 @@ jobs:
 
     # 2. Download Image Tag Artifact
     - name: Download Image Tag Artifact from CI
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
       run: |
         CI_RUN_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs \
         | jq -r '.workflow_runs[] | select(.name=="CI Pipeline") | .id' | head -n 1)
