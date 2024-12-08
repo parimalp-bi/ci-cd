@@ -35,11 +35,14 @@ jobs:
 
    # 4. Scan Image
     - name: Run Trivy Image Scan
-      uses: aquasecurity/trivy-action@v0.11.0
+      uses: aquasecurity/trivy-action@v@0.28.0
       with:
         image-ref: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
         format: table
         ignore-unfixed: true
+        # exit-code: '1'
+        # vuln-type: 'os,library'
+        # severity: 'CRITICAL,HIGH'        
 
     # 5. Login to Docker
     - name: Log in to DockerHub
@@ -49,7 +52,7 @@ jobs:
     - name: Push Docker image to DockerHub
       run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
-    # Build Helm Chart
+    # 7. Build Helm Chart
     - name: Build Helm Charts
       run: helm package helm/flask-app  
 
