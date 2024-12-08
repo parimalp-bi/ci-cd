@@ -40,6 +40,9 @@ jobs:
     - name: Push Docker image to DockerHub
       run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
+    - name: Build Helm Charts
+      run: helm package flask-app  
+
     # 5. Deploy Using Helm
     # - name: Deploy to Kubernetes
     #   env:
