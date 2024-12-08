@@ -16,15 +16,19 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: List Available Artifacts (Debug)
-      run: ls -R /home/runner/work
-
-
     # 2. Download Image Tag Artifact
-    - name: Download Image Tag Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: image-tag
+    - name: Download Image Tag Artifact from CI
+      run: |
+        CI_RUN_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs \
+        | jq -r '.workflow_runs[] | select(.name=="CI Pipeline") | .id' | head -n 1)
+        echo "Found CI Workflow Run ID: $CI_RUN_ID"
+
+        ARTIFACT_URL=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs/$CI_RUN_ID/artifacts \
+        | jq -r '.artifacts[] | select(.name=="image-tag") | .archive_download_url')
+
+        echo "Downloading Artifact: $ARTIFACT_URL"
+        curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L -o image-tag.zip $ARTIFACT_URL
+        unzip image-tag.zip
 
     - name: Read Image Tag
       run: |
