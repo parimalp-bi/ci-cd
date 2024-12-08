@@ -1,9 +1,9 @@
 name: CI/CD Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
-      - ci-pipeline-setup  # Trigger on pushes to the main branch
+      - main
 
 env:  
   IMAGE_TAG: ${{ github.run_number }}
