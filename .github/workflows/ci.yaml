@@ -60,3 +60,44 @@ jobs:
     # 7. Build Helm Chart
     - name: Build Helm Charts
       run: helm package helm/flask-app
+
+
+    # 4. Install kubectl
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+    # 5. Set Up kind
+    - name: Set up kind
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+        kind create cluster --name test-cluster
+
+    # 6. Load Docker Image into kind
+    - name: Load Docker Image into kind
+      env:
+        IMAGE_TAG: ${{ github.run_number }}
+      run: kind load docker-image flask-app:${IMAGE_TAG} --name test-cluster
+
+    # 7. Deploy Application
+    - name: Deploy Application
+      env:
+        IMAGE_TAG: ${{ github.run_number }}
+      run: |
+        kubectl create deployment flask-app --image=flask-app:${IMAGE_TAG}
+        kubectl expose deployment flask-app --type=NodePort --port=5001
+
+    # 8. Test Application
+    - name: Test Application
+      run: |
+        NODE_PORT=$(kubectl get svc flask-app -o=jsonpath='{.spec.ports[0].nodePort}')
+        echo "NodePort: $NODE_PORT"
+        curl --retry 5 --retry-delay 5 http://localhost:$NODE_PORT/
+
+    # 9. Clean Up
+    - name: Delete kind Cluster
+      run: kind delete cluster --name test-cluster      
