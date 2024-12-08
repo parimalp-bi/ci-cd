@@ -58,23 +58,23 @@ jobs:
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
-    - name: Pull Docker Image from Docker Hub
-      env:
-        IMAGE_TAG: ${{ env.IMAGE_TAG }}
-      run: docker pull ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG}
+    # - name: Pull Docker Image from Docker Hub
+    #   env:
+    #     IMAGE_TAG: ${{ env.IMAGE_TAG }}
+    #   run: docker pull ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG}
 
-    # 6. Load Docker Image into kind
-    - name: Load Docker Image into kind
-      env:
-        IMAGE_TAG: ${{ env.IMAGE_TAG }}
-      run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
+    # # 6. Load Docker Image into kind
+    # - name: Load Docker Image into kind
+    #   env:
+    #     IMAGE_TAG: ${{ env.IMAGE_TAG }}
+    #   run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
 
     # 7. Deploy Application with Helm
     - name: Deploy Application with Helm
       env:
         IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        helm upgrade --install flask-app ./packaged-charts/flask-app-*.tgz \
+        helm upgrade --install flask-app ./helm/flask-app  \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
           --set image.pullPolicy=Always \
