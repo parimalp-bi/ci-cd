@@ -38,7 +38,7 @@ jobs:
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: Push Docker image to DockerHub
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/flask_app:latest
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
 
     # 5. Deploy Using Helm
     # - name: Deploy to Kubernetes
