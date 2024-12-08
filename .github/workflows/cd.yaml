@@ -93,7 +93,9 @@ jobs:
             break
           fi
           echo "Pod status: $STATUS. Retrying in 5 seconds..."
-          sleep 5
+          kubectl describe pod ${POD_NAME}
+          kubectl logs ${POD_NAME}
+          sleep 10
         done
 
         if [[ "$STATUS" != "Running" ]]; then
