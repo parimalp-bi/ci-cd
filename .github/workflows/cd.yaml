@@ -16,6 +16,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: List Available Artifacts (Debug)
+      run: ls /home/runner/work
+
+
     # 2. Download Image Tag Artifact
     - name: Download Image Tag Artifact
       uses: actions/download-artifact@v4

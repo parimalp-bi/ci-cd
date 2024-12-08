@@ -48,6 +48,7 @@ jobs:
       with:
         name: image-tag
         path: image_tag.txt
+        retention-days: 30
 
     # 5. Scan Docker Image
     # - name: Run Trivy Image Scan
