@@ -58,6 +58,11 @@ jobs:
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
+    - name: Pull Docker Image from Docker Hub
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: docker pull ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG}
+
     # 6. Load Docker Image into kind
     - name: Load Docker Image into kind
       env:

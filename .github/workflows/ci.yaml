@@ -72,4 +72,11 @@ jobs:
 
     # 8. Build Helm Chart
     - name: Build Helm Charts
-      run: helm package helm/flask-app
+      run: helm package helm/flask-app --destination packaged-charts
+
+    # 9. Upload Helm Chart Artifact
+    - name: Upload Helm Chart Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: helm-chart
+        path: packaged-charts/      
