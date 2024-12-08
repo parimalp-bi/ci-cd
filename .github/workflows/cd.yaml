@@ -79,7 +79,8 @@ jobs:
       env:
         IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        helm upgrade --install flask-app ./packaged-charts/flask-app-*.tgz \
+        ls -R ./packaged-charts/
+        helm upgrade --install flask-app ./packaged-charts/app-*.tgz \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
           --set image.pullPolicy=Always \
