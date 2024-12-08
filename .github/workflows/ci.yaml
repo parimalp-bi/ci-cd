@@ -94,11 +94,31 @@ jobs:
     # 8. Test Application
     - name: Test Application
       run: |
-        POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath="{.items[0].metadata.name}")
+        echo "Waiting for the pod to be ready..."
+        POD_NAME=""
+        for _ in {1..30}; do
+          POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath="{.items[0].metadata.name}" 2>/dev/null || echo "")
+          [[ -n "$POD_NAME" ]] && STATUS=$(kubectl get pod $POD_NAME -o=jsonpath='{.status.phase}') || STATUS=""
+          if [[ "$STATUS" == "Running" ]]; then
+            echo "Pod is running: $POD_NAME"
+            break
+          fi
+          echo "Pod status: $STATUS. Retrying in 5 seconds..."
+          sleep 5
+        done
+
+        if [[ "$STATUS" != "Running" ]]; then
+          echo "Error: Pod did not start within the expected time."
+          exit 1
+        fi
+
+        echo "Setting up port forwarding..."
         kubectl port-forward pod/$POD_NAME 5001:5001 &
         sleep 5
+        echo "Testing the application..."
         curl --retry 5 --retry-delay 5 http://localhost:5001/
 
+        
     # 9. Clean Up
     - name: Delete kind Cluster
       run: kind delete cluster --name test-cluster      
