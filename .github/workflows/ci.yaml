@@ -32,10 +32,9 @@ jobs:
     # 3. Build Docker Image
     - name: Build Docker image
       run: docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-app:latest .
-
    # 4. Scan Image
     - name: Run Trivy Image Scan
-      uses: aquasecurity/trivy-action@v@0.28.0
+      uses: aquasecurity/trivy-action@0.28.0
       with:
         image-ref: ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
         format: table
