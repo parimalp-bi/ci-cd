@@ -16,14 +16,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # 2. Install kubectl
+    # 2. Download Image Tag Artifact
+    - name: Download Image Tag Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: image-tag
+
+    - name: Read Image Tag
+      run: |
+        IMAGE_TAG=$(cat image_tag.txt)
+        echo "Image Tag: $IMAGE_TAG"
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    # 3. Install kubectl
     - name: Install kubectl
       run: |
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
 
-    # 3. Set Up kind
+    # 4. Set Up kind
     - name: Set up kind
       run: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
@@ -31,28 +43,28 @@ jobs:
         sudo mv ./kind /usr/local/bin/kind
         kind create cluster --name test-cluster
 
-    # 4. Install Helm
+    # 5. Install Helm
     - name: Install Helm
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
-    # 5. Load Docker Image into kind
+    # 6. Load Docker Image into kind
     - name: Load Docker Image into kind
       env:
-        IMAGE_TAG: ${{ github.run_number }}
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
 
-    # 6. Deploy Application with Helm
+    # 7. Deploy Application with Helm
     - name: Deploy Application with Helm
       env:
-        IMAGE_TAG: ${{ github.run_number }}
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
         helm upgrade --install flask-app ./helm/flask-app \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
           --set service.type=NodePort
 
-    # 7. Test Application
+    # 8. Test Application
     - name: Test Application
       run: |
         echo "Waiting for the pod to be ready..."
@@ -79,6 +91,6 @@ jobs:
         echo "Testing the application..."
         curl --retry 5 --retry-delay 5 -s http://localhost:5001/
 
-    # 8. Clean Up
+    # 9. Clean Up
     - name: Delete kind Cluster
       run: kind delete cluster --name test-cluster
