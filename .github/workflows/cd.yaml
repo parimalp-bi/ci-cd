@@ -19,17 +19,17 @@ jobs:
     # 2. Download Image Tag Artifact
     - name: Download Image Tag Artifact from CI
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         CI_RUN_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs \
-        | jq -r '.workflow_runs[] | select(.name=="CI Pipeline") | .id' | head -n 1)
+        | jq -r '.workflow_runs[] | select(.name=="CI Pipeline") | .id' | head -n1)
         echo "Found CI Workflow Run ID: $CI_RUN_ID"
 
-        ARTIFACT_URL=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs/$CI_RUN_ID/artifacts \
+        IMAGE_TAG_ARTIFACT_URL=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs/$CI_RUN_ID/artifacts \
         | jq -r '.artifacts[] | select(.name=="image-tag") | .archive_download_url')
 
-        echo "Downloading Artifact: $ARTIFACT_URL"
-        curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L -o image-tag.zip $ARTIFACT_URL
+        echo "Downloading Image Tag Artifact: $IMAGE_TAG_ARTIFACT_URL"
+        curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L -o image-tag.zip $IMAGE_TAG_ARTIFACT_URL
         unzip image-tag.zip
 
     - name: Read Image Tag
@@ -38,14 +38,30 @@ jobs:
         echo "Image Tag: $IMAGE_TAG"
         echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-    # 3. Install kubectl
+    # 3. Download Helm Chart Artifact
+    - name: Download Helm Chart Artifact from CI
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        CI_RUN_ID=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs \
+        | jq -r '.workflow_runs[] | select(.name=="CI Pipeline") | .id' | head -n1)
+        echo "Found CI Workflow Run ID: $CI_RUN_ID"
+
+        HELM_CHART_ARTIFACT_URL=$(gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/runs/$CI_RUN_ID/artifacts \
+        | jq -r '.artifacts[] | select(.name=="helm-chart") | .archive_download_url')
+
+        echo "Downloading Helm Chart Artifact: $HELM_CHART_ARTIFACT_URL"
+        curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L -o helm-chart.zip $HELM_CHART_ARTIFACT_URL
+        unzip helm-chart.zip
+
+    # 4. Install kubectl
     - name: Install kubectl
       run: |
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
 
-    # 4. Set Up kind
+    # 5. Set Up kind
     - name: Set up kind
       run: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
@@ -53,28 +69,17 @@ jobs:
         sudo mv ./kind /usr/local/bin/kind
         kind create cluster --name test-cluster
 
-    # 5. Install Helm
+    # 6. Install Helm
     - name: Install Helm
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
-    # - name: Pull Docker Image from Docker Hub
-    #   env:
-    #     IMAGE_TAG: ${{ env.IMAGE_TAG }}
-    #   run: docker pull ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG}
-
-    # # 6. Load Docker Image into kind
-    # - name: Load Docker Image into kind
-    #   env:
-    #     IMAGE_TAG: ${{ env.IMAGE_TAG }}
-    #   run: kind load docker-image ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} --name test-cluster
-
-    # 7. Deploy Application with Helm
+    # 7. Deploy Application with Downloaded Helm Chart
     - name: Deploy Application with Helm
       env:
         IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        helm upgrade --install flask-app ./helm/flask-app  \
+        helm upgrade --install flask-app ./packaged-charts/flask-app-*.tgz \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
           --set image.pullPolicy=Always \
@@ -106,7 +111,7 @@ jobs:
         sleep 5
         echo "Testing the application..."
         RESPONSE=$(curl --retry 5 --retry-delay 5 -s -w "\n%{http_code}" http://localhost:5001/)
-        BODY=$(echo "$RESPONSE" | sed '$d') 
+        BODY=$(echo "$RESPONSE" | sed '$d')
         STATUS_CODE=$(echo "$RESPONSE" | tail -n1)
         echo "Response Body: $BODY"
         echo "HTTP Status Code: $STATUS_CODE"
