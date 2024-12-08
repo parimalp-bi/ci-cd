@@ -74,9 +74,10 @@ jobs:
       env:
         IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        helm upgrade --install flask-app ./helm/flask-app \
+        helm upgrade --install flask-app ./packaged-charts/flask-app-*.tgz \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
+          --set image.pullPolicy=Always \
           --set service.type=NodePort
 
     # 8. Test Application
