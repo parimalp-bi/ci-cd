@@ -124,7 +124,7 @@ jobs:
         kubectl port-forward pod/$POD_NAME 5001:5001 &
         sleep 5
         echo "Testing the application..."
-        curl --retry 5 --retry-delay 5 -s -o /dev/null -w "Response Body: %{http_code} %{size_download} bytes\n" http://localhost:5001/
+        curl --retry 5 --retry-delay 5 -s http://localhost:5001/
 
         
     # 9. Clean Up
