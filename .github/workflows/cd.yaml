@@ -127,7 +127,7 @@ jobs:
         NC='\033[0m' # No Color
 
         if [[ "$STATUS_CODE" == "200" ]]; then
-          echo -e "Response Body: $BODY"
+          echo -e "${GREEN}Response Body: $BODY${NC}"
           echo -e "${GREEN}HTTP Status Code: $STATUS_CODE${NC}"
         else
           echo -e "Response Body: $BODY"
