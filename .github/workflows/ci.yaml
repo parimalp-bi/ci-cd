@@ -39,7 +39,7 @@ jobs:
         IMAGE_TAG: ${{ github.run_number }}
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-app:${IMAGE_TAG} .
-        echo "image_tag=${IMAGE_TAG}" >> image_tag.txt
+        echo "${IMAGE_TAG}" > image_tag.txt
         echo "::set-output name=image_tag::${IMAGE_TAG}"
 
     # 4. Save Image Tag as Artifact
