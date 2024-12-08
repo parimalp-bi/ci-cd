@@ -59,8 +59,10 @@ jobs:
 
         echo "Downloading Helm Chart Artifact: $HELM_CHART_ARTIFACT_URL"
         curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L -o helm-chart.zip $HELM_CHART_ARTIFACT_URL
+        mkdir -p packaged-charts
+        unzip helm-chart.zip -d packaged-charts
         pwd
-        unzip helm-chart.zip
+        ls -R ./
 
     # 4. Install kubectl
     - name: Install kubectl
@@ -87,7 +89,6 @@ jobs:
       env:
         IMAGE_TAG: ${{ env.IMAGE_TAG }}
       run: |
-        ls -R ./packaged-charts/
         helm upgrade --install flask-app ./packaged-charts/app-*.tgz \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/flask-app \
           --set image.tag=${IMAGE_TAG} \
