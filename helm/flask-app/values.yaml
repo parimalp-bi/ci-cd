@@ -1,0 +1,22 @@
+replicaCount: 1
+
+image:
+  repository: flask_app
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: NodePort
+  port: 5001
+  nodePort: 31060
+
+resources:
+  limits:
+    cpu: 128m
+    memory: 128Mi
+  requests:
+    cpu: 128m
+    memory: 128Mi
+
+ingress:
+  enabled: false
